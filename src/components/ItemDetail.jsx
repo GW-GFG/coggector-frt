@@ -66,7 +66,6 @@ export default function ItemDetail({
 
       {/* Zone achat */}
             <div className="detail-form" style={{ marginTop: 10 }}>
-        <label>Action d'achat</label>
         {isGuest ? (
           <p className="hint">
             Tu es en mode invité : tu peux voir le catalogue mais pas acheter.
