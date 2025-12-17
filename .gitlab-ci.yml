@@ -8,6 +8,7 @@ workflow:
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
     - if: $CI_COMMIT_BRANCH == "DEVELOP"
+    - if: $CI_COMMIT_BRANCH == "main"
 
 validate_lint:
   image: node:lts-trixie-slim
@@ -43,6 +44,7 @@ deploy_app:
   script:
     - echo "Start deploy"
     - echo "Deploy finished"
-  when: manual
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: manual
   allow_failure: true
-
