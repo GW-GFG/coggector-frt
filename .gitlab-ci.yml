@@ -2,6 +2,7 @@ stages:
   - validate
   - security
   - e2e
+  - deploy
 
 workflow:
   rules:
@@ -35,3 +36,15 @@ test_e2e:
     - npm run test:e2e
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"
+
+deploy_app:
+  image: alpine:3.20
+  stage: deploy
+  script:
+    - echo "Start deploy"
+    - echo "Deploy finished"
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: manual
+  allow_failure: true
+
