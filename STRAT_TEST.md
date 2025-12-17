@@ -1,6 +1,7 @@
 # Stratégie de test
 
 ### AVANT DE FAIRE LE MERGE REQUEST ENTRE LA BRANCHE FEATURE-X ET LA BRANCHE DEVELOP
+##### faire en sorte que tant que le pipeline n'est pas vert alors ça fait pas le merge request
 * Test automatique (intégration / unitaire)
 * Sonarqube
 * Build | Compile
