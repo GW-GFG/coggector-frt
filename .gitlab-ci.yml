@@ -1,6 +1,7 @@
 
 stages:          
   - validate
+  - security
 
 workflow:
   rules:
@@ -15,3 +16,14 @@ lint:
     - npm run lint
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+
+
+dependecy_scan:
+  image: node:lts-trixie-slim
+  stage: security
+  script:
+    - npm ci
+    - npm audit --aduit-level=high
+  rules:
+    - if: $CI_COMMIT_BRANCH == "develop"
+  
