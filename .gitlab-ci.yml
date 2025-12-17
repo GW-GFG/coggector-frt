@@ -1,5 +1,4 @@
-
-stages:          
+stages:
   - validate
   - security
 
@@ -7,23 +6,21 @@ workflow:
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
     - if: $CI_COMMIT_BRANCH == "develop"
-    - if: $CI_COMMIT_BRANCH == "main"
 
-lint:
+validate_lint:
   image: node:lts-trixie-slim
   stage: validate
   script:
+    - npm ci
     - npm run lint
   rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "develop"
 
-
-dependecy_scan:
+dependency_scan:
   image: node:lts-trixie-slim
   stage: security
   script:
     - npm ci
-    - npm audit --aduit-level=high
+    - npm audit --audit-level=high
   rules:
-    - if: $CI_COMMIT_BRANCH == "develop"
-  
+    - if: $CI_COMMIT_BRANCH == "develop" && $CI_PIPELINE_SOURCE == "push"
