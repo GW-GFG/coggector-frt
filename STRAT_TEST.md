@@ -1,6 +1,6 @@
 # Stratégie de test
 
-### MERGE REQUEST ENTRE LA BRANCHE FEATURE-X ET LA BRANCHE DEVELOP
+### AVANT DE FAIRE LE MERGE REQUEST ENTRE LA BRANCHE FEATURE-X ET LA BRANCHE DEVELOP
 * Test unitaire écrit par le développeur
 * Build | Compile
 * Sonarqube
