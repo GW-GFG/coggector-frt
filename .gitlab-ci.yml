@@ -1,6 +1,7 @@
 stages:
   - validate
   - security
+  - e2e
 
 workflow:
   rules:
@@ -24,3 +25,13 @@ dependency_scan:
     - npm audit --audit-level=high
   rules:
     - if: $CI_COMMIT_BRANCH == "DEVELOP"
+
+test_e2e:
+  image: node:lts-trixie-slim
+  stage: e2e
+  script:
+    - npm ci
+    - npm run build
+    - npm run test:e2e
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"
