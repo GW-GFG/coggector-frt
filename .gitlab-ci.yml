@@ -9,6 +9,7 @@ workflow:
     - if: $CI_COMMIT_BRANCH == "main"
 
 lint:
+  image: node:lts-trixie-slim
   stage: validate
   script:
     - npm run list
