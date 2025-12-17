@@ -44,7 +44,6 @@ deploy_app:
     - echo "Start deploy"
     - echo "Deploy finished"
   rules:
-    - if: $CI_COMMIT_BRANCH == "main"
       when: manual
   allow_failure: true
 
