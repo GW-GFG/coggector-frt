@@ -43,7 +43,6 @@ deploy_app:
   script:
     - echo "Start deploy"
     - echo "Deploy finished"
-  rules:
-      when: manual
+  when: manual
   allow_failure: true
 
