@@ -1,16 +1,15 @@
 # Stratégie de test
 
 ### AVANT DE FAIRE LE MERGE REQUEST ENTRE LA BRANCHE FEATURE-X ET LA BRANCHE DEVELOP
-* Test unitaire écrit par le développeur
-* Build | Compile
+* Test automatique (intégration / unitaire)
 * Sonarqube
+* Build | Compile
 
 
 ### A FAIRE SUR LA BRANCHE DEVELOP
+* Tout les tests fait avant le MERGE REQUEST
 * Build | Compile
-* Test d'intégration
 * Test vulnérabilité
-* Sonarqube
 * Test sécurité
 
 
