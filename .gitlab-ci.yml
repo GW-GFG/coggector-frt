@@ -7,6 +7,18 @@ workflow:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
     - if: $CI_COMMIT_BRANCH == "develop"
 
+
+debug_ci:
+  stage: validate
+  image: node:lts-trixie-slim
+  script:
+    - echo "SOURCE=$CI_PIPELINE_SOURCE"
+    - echo "BRANCH=$CI_COMMIT_BRANCH"
+    - echo "TARGET=$CI_MERGE_REQUEST_TARGET_BRANCH_NAME"
+  rules:
+    - when: always
+
+
 validate_lint:
   image: node:lts-trixie-slim
   stage: validate
