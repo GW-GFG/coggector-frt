@@ -12,6 +12,6 @@ lint:
   image: node:lts-trixie-slim
   stage: validate
   script:
-    - npm run list
+    - npm run lint
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
