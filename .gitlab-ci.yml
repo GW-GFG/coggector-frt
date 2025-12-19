@@ -10,6 +10,9 @@ workflow:
     - if: $CI_COMMIT_BRANCH == "DEVELOP"
     - if: $CI_COMMIT_BRANCH == "main"
 
+
+# TEST A FAIRE AVEC QUE LE MERGE PASSE SUR DEVELOP
+#INTEGRATION
 validate_lint:
   image: node:lts-trixie-slim
   stage: validate
@@ -19,6 +22,16 @@ validate_lint:
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "DEVELOP"
 
+#SONARQUBE
+#TRIVY
+#BUILD
+
+#A FAIRE QUAND ON MERGE LA BRANCHE DEVELOP SUR LA BRANCHE MAIN
+#REFAIRE TOUT CE QUI A ETAIT FAIT AVANT
+
+#TEST VULNERABILITE
+
+#TEST SECURITE
 dependency_scan:
   image: node:lts-trixie-slim
   stage: security
@@ -28,6 +41,11 @@ dependency_scan:
   rules:
     - if: $CI_COMMIT_BRANCH == "DEVELOP"
 
+#A FAIRE QUAND UN MERGE EST DETECTE SUR LA BRANCHE MAIN
+
+#TEST QUALITE
+
+#TEST E2E
 test_e2e:
   image: node:lts-trixie-slim
   stage: e2e
@@ -38,6 +56,13 @@ test_e2e:
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"
 
+#GENERATION ARTIFACT
+
+#GENERATION IMAGE
+
+#PUSH IMAGE SUR REPO PRIVEE
+
+#DEPLOIEMENT LAISSER UN BOUTON MANUEL POUR LE FAIRE FAIRE PAR UNE PERSONNE
 deploy_app:
   image: alpine:3.20
   stage: deploy
