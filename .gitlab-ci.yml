@@ -2,7 +2,6 @@ stages:
   - validate
   - security
   - e2e
-  - deploy
 
 workflow:
   rules:
@@ -62,14 +61,3 @@ test_e2e:
 
 #PUSH IMAGE SUR REPO PRIVEE
 
-#DEPLOIEMENT LAISSER UN BOUTON MANUEL POUR LE FAIRE FAIRE PAR UNE PERSONNE
-deploy_app:
-  image: alpine:3.20
-  stage: deploy
-  script:
-    - echo "Start deploy"
-    - echo "Deploy finished"
-  rules:
-    - if: $CI_COMMIT_BRANCH == "main"
-      when: manual
-  allow_failure: true
