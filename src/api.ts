@@ -1,6 +1,6 @@
 // api.ts (frontend) — TypeScript
 
-const API_BASE: string = (import.meta as any)?.env?.VITE_API_BASE ?? "";
+const API_BASE: string = import.meta.env.VITE_API_BASE || "";
 
 // ---------- Types utilitaires ----------
 type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "HEAD";
