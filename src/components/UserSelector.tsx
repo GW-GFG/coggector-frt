@@ -1,5 +1,3 @@
-import type { CurrentUser } from "../types";
-
 interface UserSelectorProps {
   accessToken: string | null;
   onChangeAccessToken: (token: string | null) => void;

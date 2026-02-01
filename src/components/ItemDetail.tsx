@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import type { Item, CurrentUser } from "../types";
 
 interface ItemDetailProps {
   item: Item | null;

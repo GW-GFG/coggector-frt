@@ -1,5 +1,4 @@
 import ItemCard from "./ItemCard";
-import type { Item, CurrentUser } from "../types";
 
 interface ItemListProps {
   items: Item[];

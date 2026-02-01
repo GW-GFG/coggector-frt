@@ -1,5 +1,3 @@
-import type { Shop } from "../types";
-
 interface ShopsListProps {
   shops: Shop[];
 }

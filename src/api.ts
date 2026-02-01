@@ -3,13 +3,6 @@
 const API_BASE: string = import.meta.env.VITE_API_BASE || "";
 
 // ---------- Types utilitaires ----------
-type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "HEAD";
-
-type RequestOptions = Omit<RequestInit, "headers" | "method" | "body"> & {
-  method?: HttpMethod;
-  headers?: Record<string, string>;
-  body?: unknown; // on sérialise nous-mêmes en JSON si présent
-};
 
 function withAuth(options: RequestOptions = {}, accessToken?: string | null): RequestInit {
   const headers: Record<string, string> = {
@@ -69,26 +62,18 @@ async function requestJson<T>(
 
 // ---------- Endpoints ----------
 
-export type HealthResponse = {
-  status: string;
-  service: string;
-  // optionnel selon ta gateway:
-  version?: string;
-  ready?: boolean;
-  statusCode?: number;
-};
+// Get current user (protected)
+export async function fetchCurrentUser(
+  accessToken: string | null
+): Promise<CurrentUser> {
+  return requestJson<CurrentUser>(`/users/me`, {}, accessToken);
+}
 
 export async function fetchHealth(): Promise<HealthResponse> {
   return requestJson<HealthResponse>("/healthz");
 }
 
 // Items (public)
-export type Item = {
-  id: number | string;
-  name?: string;
-  price?: number;
-};
-
 export async function fetchItems(params?: { scope?: string }): Promise<Item[]> {
   const qs = new URLSearchParams();
   if (params?.scope) qs.set("scope", params.scope);
@@ -97,31 +82,15 @@ export async function fetchItems(params?: { scope?: string }): Promise<Item[]> {
   return requestJson<Item[]>(path);
 }
 
-// Current user (protected)
-export type CurrentUser = {
-  id: string;
-  username?: string;
-  email?: string;
-  roles?: string[];
-  // adapte à ta réponse réelle
-};
-
-export async function fetchCurrentUser(accessToken: string | null): Promise<CurrentUser | null> {
-  if (!accessToken) return null;
-  return requestJson<CurrentUser>("/users/me", {}, accessToken);
-}
-
-// Recommendations (protected)
-export type Recommendation = {
-  id: string | number;
-  // adapte
-};
-
 export async function fetchRecommendations(
   userId: number,
   accessToken: string | null
 ): Promise<Recommendation[]> {
-  return requestJson<Recommendation[]>(`/users/${userId}/recommendations`, {}, accessToken);
+  return requestJson<Recommendation[]>(
+    `/users/${userId}/recommendations`,
+    {},
+    accessToken
+  );
 }
 
 // Change item price (protected)
@@ -145,12 +114,7 @@ export async function purchaseItem(
   return requestJson(`/items/${id}/purchase`, { method: "POST" }, accessToken);
 }
 
-// Shops (protected)
-export type Shop = {
-  id: number | string;
-  // adapte
-};
-
+// Shops
 export async function fetchShops(accessToken: string | null): Promise<Shop[]> {
-  return requestJson<Shop[]>("/shops", {}, accessToken);
+  return requestJson<Shop[]>(`/shops`, {}, accessToken);
 }

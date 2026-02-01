@@ -11,18 +11,11 @@ import {
   fetchHealth,
   fetchItems,
   fetchRecommendations,
-  changeItemPrice,
   fetchCurrentUser,
-  fetchShops,
   purchaseItem,
+  changeItemPrice,
+  fetchShops,
 } from "./api";
-import type {
-  HealthResponse,
-  Item,
-  CurrentUser,
-  Recommendation,
-  Shop,
-} from "./types";
 
 export default function App(): JSX.Element {
   const [accessToken, setAccessToken] = useState<string | null>(null);
@@ -48,8 +41,18 @@ export default function App(): JSX.Element {
         const healthRes = await fetchHealth();
         setHealth(healthRes);
 
-        const userRes = await fetchCurrentUser(accessToken);
-        setCurrentUser(userRes);
+        let userRes: CurrentUser | null = null;
+        if (accessToken) {
+          try {
+            userRes = await fetchCurrentUser(accessToken);
+            setCurrentUser(userRes);
+          } catch (e) {
+            console.warn("Failed to fetch current user", e);
+            setCurrentUser(null);
+          }
+        } else {
+          setCurrentUser(null);
+        }
 
         const isSeller = userRes?.roles?.includes("seller");
 
@@ -58,7 +61,7 @@ export default function App(): JSX.Element {
         setSelectedItem(itemsRes[0] || null);
 
         // Shops uniquement pour les sellers
-        if (isSeller) {
+        if (isSeller && accessToken) {
           const shopsRes = await fetchShops(accessToken);
           setShops(shopsRes);
         }

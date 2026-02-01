@@ -1,5 +1,3 @@
-import type { Item, CurrentUser } from "../types";
-
 interface ItemCardProps {
   item: Item;
   onSelect: (item: Item) => void;

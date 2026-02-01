@@ -1,5 +1,3 @@
-import type { Recommendation } from "../types";
-
 interface RecommendationsProps {
   data: Recommendation[] | null;
 }
