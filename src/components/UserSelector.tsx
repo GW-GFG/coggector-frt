@@ -31,7 +31,7 @@ export default function UserSelector({
       </div>
 
       <p className="hint">
-        Roles: <strong>{rolesLabel}</strong>
+        Rôles: <strong>{rolesLabel}</strong>
       </p>
 
       {isBuyer && (
@@ -40,13 +40,13 @@ export default function UserSelector({
           onClick={onLoadRecommendations}
           disabled={loadingRecs}
         >
-          {loadingRecs ? "Loading..." : "Load Recommendations"}
+          {loadingRecs ? "Chargement..." : "Charger les recommandations"}
         </button>
       )}
 
       {!currentUser && (
         <p className="hint">
-          Vous n'êtes pas connecté. Entrez un jeton pour accéder aux fonctionnalités.
+          Vous n'êtes pas connecté(e). Entrez un jeton pour accéder aux fonctionnalités.
         </p>
       )}
     </div>
