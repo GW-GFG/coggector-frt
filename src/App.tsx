@@ -143,10 +143,12 @@ export default function App(): JSX.Element {
       />
       {health && (
         <div className="card">
-          <h2 className="card-title">Statut API</h2>
+          <h2 className="card-title">Disponibilité du serveur</h2>
           <p>
-            <span className="status-dot status-ok" /> {health.status} –{" "}
-            {health.service}
+            <span className="status-dot status-ok" />
+            {health.status === "ok"
+            ? `${health.status} – ${health.service}`
+            : "Serveur indisponible, veuillez réessayer plus tard."}
           </p>
           <p className="hint">version {health.version}</p>
         </div>

@@ -19,16 +19,16 @@ export default function ItemList({
   const isGuest = !currentUser;
 
   const title = isGuest
-    ? "Catalog (Guest)"
+    ? "Catalogue (Visiteur)"
     : isSellerOnly
-      ? "My Listings (Seller)"
-      : "Catalog";
+      ? "Mes Annonces (Vendeur)"
+      : "Catalogue";
 
   return (
     <div className="card">
       <div className="card-title-row">
         <h2 className="card-title">{title}</h2>
-        <span className="pill">{items.length} item(s)</span>
+        <span className="pill">{items.length} article(s)</span>
       </div>
       <div className="item-grid">
         {items.map((item) => (

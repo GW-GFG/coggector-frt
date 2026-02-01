@@ -19,14 +19,14 @@ export default function UserSelector({
 
   return (
     <div className="card">
-      <h2 className="card-title">Login</h2>
+      <h2 className="card-title">Connexion</h2>
       <div className="field">
-        <label>Access Token</label>
+        <label>Jeton d'accès</label>
         <input
           type="password"
           value={accessToken ?? ""}
           onChange={(e) => onChangeAccessToken(e.target.value || null)}
-          placeholder="Enter your access token"
+          placeholder="Entrez votre jeton d'accès"
         />
       </div>
 
@@ -46,7 +46,7 @@ export default function UserSelector({
 
       {!currentUser && (
         <p className="hint">
-          You are not logged in. Enter a token to access features.
+          Vous n'êtes pas connecté. Entrez un jeton pour accéder aux fonctionnalités.
         </p>
       )}
     </div>

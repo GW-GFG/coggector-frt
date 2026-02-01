@@ -24,8 +24,8 @@ export default function ItemDetail({
   if (!item) {
     return (
       <div className="card">
-        <h2 className="card-title">Item Detail</h2>
-        <p>Select an item from the list.</p>
+        <h2 className="card-title">Fiche article</h2>
+        <p>Sélectionnez un article dans la liste.</p>
       </div>
     );
   }
@@ -47,7 +47,7 @@ export default function ItemDetail({
 
   return (
     <div className="card">
-      <h2 className="card-title">Item Detail</h2>
+      <h2 className="card-title">Fiche article</h2>
       {item.imageUrl && (
         <div className="detail-image-wrapper">
           <img src={item.imageUrl} alt={item.title} className="detail-image" />
@@ -58,17 +58,17 @@ export default function ItemDetail({
 
       <div className="detail-row">
         <div>
-          <div className="label">Category</div>
+          <div className="label">Catégorie</div>
           <div>{item.category}</div>
         </div>
         <div>
-          <div className="label">Price</div>
+          <div className="label">Prix</div>
           <div>
             {item.price} {item.currency}
           </div>
         </div>
         <div>
-          <div className="label">Shipping</div>
+          <div className="label">Frais de livraison</div>
           <div>{item.shippingFees} €</div>
         </div>
       </div>
@@ -77,19 +77,19 @@ export default function ItemDetail({
       <div className="detail-form" style={{ marginTop: 10 }}>
         {isGuest ? (
           <p className="hint">
-            You are not logged in. Log in to purchase items.
+            Vous devez être connecté pour acheter cet article.
           </p>
         ) : isOwner ? (
           <p className="hint">
-            You own this item: you cannot purchase it.
+            Vous possédez cet article : vous ne pouvez pas l'acheter.
           </p>
         ) : isBuyer ? (
           <button className="btn-primary" onClick={handlePurchase}>
-            Purchase this item
+            Acheter cet article
           </button>
         ) : (
           <p className="hint">
-            You don't have the buyer role.
+            Veuillez vous connecter pour acheter cet article.
           </p>
         )}
       </div>
@@ -97,7 +97,7 @@ export default function ItemDetail({
       {/* Price change form (seller only) */}
       {isSeller && isOwner && (
         <form onSubmit={handleSubmitPrice} className="detail-form">
-          <label>Change Price</label>
+          <label>Changer le prix</label>
           <div className="detail-form-row">
             <input
               type="number"
@@ -106,7 +106,7 @@ export default function ItemDetail({
               onChange={(e) => setPriceInput(e.target.value)}
             />
             <button type="submit" className="btn-secondary">
-              Update Price
+              Mettre à jour le prix
             </button>
           </div>
         </form>
