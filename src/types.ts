@@ -1,7 +1,16 @@
 export type Item = {
   id: number | string;
-  name?: string;
-  price?: number;
+  title: string;
+  category: string;
+  description: string;
+  price: number;
+  currency: string;
+  shippingFees: number;
+  sellerId: number;
+  shopId: number;
+  status: string;
+  imageUrl: string;
+  watchers: number[];
 };
 
 export type CurrentUser = {

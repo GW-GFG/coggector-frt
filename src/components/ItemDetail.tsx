@@ -32,6 +32,8 @@ export default function ItemDetail({
   }
 
   const isBuyer = currentUser?.roles?.includes("buyer");
+  const isSeller = currentUser?.roles?.includes("seller");
+  const isOwner = currentUser && item.sellerId === Number(currentUser.id);
   const isGuest = !currentUser;
 
   const handleSubmitPrice = (e: React.FormEvent<HTMLFormElement>): void => {
@@ -47,12 +49,28 @@ export default function ItemDetail({
   return (
     <div className="card">
       <h2 className="card-title">Item Detail</h2>
-      <h3 className="item-title">{item.name}</h3>
+      {item.imageUrl && (
+        <div className="detail-image-wrapper">
+          <img src={item.imageUrl} alt={item.title} className="detail-image" />
+        </div>
+      )}
+      <h3 className="item-title">{item.title}</h3>
+      <p className="item-desc">{item.description}</p>
 
       <div className="detail-row">
         <div>
+          <div className="label">Category</div>
+          <div>{item.category}</div>
+        </div>
+        <div>
           <div className="label">Price</div>
-          <div>{item.price}</div>
+          <div>
+            {item.price} {item.currency}
+          </div>
+        </div>
+        <div>
+          <div className="label">Shipping</div>
+          <div>{item.shippingFees} €</div>
         </div>
       </div>
 
@@ -61,6 +79,10 @@ export default function ItemDetail({
         {isGuest ? (
           <p className="hint">
             You are not logged in. Log in to purchase items.
+          </p>
+        ) : isOwner ? (
+          <p className="hint">
+            You own this item: you cannot purchase it.
           </p>
         ) : isBuyer ? (
           <button className="btn-primary" onClick={handlePurchase}>
@@ -74,7 +96,7 @@ export default function ItemDetail({
       </div>
 
       {/* Price change form (seller only) */}
-      {currentUser?.roles?.includes("seller") && (
+      {isSeller && isOwner && (
         <form onSubmit={handleSubmitPrice} className="detail-form">
           <label>Change Price</label>
           <div className="detail-form-row">
