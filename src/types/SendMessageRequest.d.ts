@@ -1,0 +1,3 @@
+type SendMessageRequest = {
+  content: string;
+};

@@ -1,33 +1,48 @@
 interface UserSelectorProps {
-  accessToken: string | null;
-  onChangeAccessToken: (token: string | null) => void;
+  isAuthenticated: boolean;
+  onLogin: () => void;
+  onLogout: () => void;
+
   onLoadRecommendations: () => Promise<void>;
   loadingRecs: boolean;
+
   currentUser: CurrentUser | null;
 }
 
 export default function UserSelector({
-  accessToken,
-  onChangeAccessToken,
+  isAuthenticated,
+  onLogin,
+  onLogout,
   onLoadRecommendations,
   loadingRecs,
   currentUser,
 }: UserSelectorProps): JSX.Element {
-  const rolesLabel = currentUser ? currentUser.roles?.join(" / ") ?? "User" : "Guest";
+  const rolesLabel = currentUser?.roles?.length
+    ? currentUser.roles.join(" / ")
+    : isAuthenticated
+      ? "Authentifié(e)"
+      : "Invité(e)";
 
-  const isBuyer = currentUser?.roles?.includes("buyer");
+  const isBuyer = currentUser?.roles?.includes("buyer") ?? false;
 
   return (
     <div className="card">
-      <h2 className="card-title">Connexion</h2>
-      <div className="field">
-        <label>Jeton d'accès</label>
-        <input
-          type="password"
-          value={accessToken ?? ""}
-          onChange={(e) => onChangeAccessToken(e.target.value || null)}
-          placeholder="Entrez votre jeton d'accès"
-        />
+      <h2 className="card-title">Espace utilisateur</h2>
+
+      <div className="field" style={{ display: "flex", gap: 8, alignItems: "center" }}>
+        {!isAuthenticated ? (
+          <button className="btn-primary" onClick={onLogin}>
+            Connexion
+          </button>
+        ) : (
+          <button className="btn-secondary" onClick={onLogout}>
+            Déconnexion
+          </button>
+        )}
+
+        <span className="hint">
+          Statut: <strong>{isAuthenticated ? "Connecté(e)" : "Invité(e)"}</strong>
+        </span>
       </div>
 
       <p className="hint">
@@ -38,15 +53,15 @@ export default function UserSelector({
         <button
           className="btn-primary"
           onClick={onLoadRecommendations}
-          disabled={loadingRecs}
+          disabled
         >
           {loadingRecs ? "Chargement..." : "Charger les recommandations"}
         </button>
       )}
 
-      {!currentUser && (
+      {isAuthenticated && !currentUser && (
         <p className="hint">
-          Vous n'êtes pas connecté(e). Entrez un jeton pour accéder aux fonctionnalités.
+          Profil inaccessible.
         </p>
       )}
     </div>

@@ -1,6 +1,6 @@
 // api.ts (frontend) — TypeScript
 
-const API_BASE: string = import.meta.env.VITE_API_BASE || "";
+export const API_BASE: string = import.meta.env.VITE_API_BASE || "";
 
 // ---------- Types utilitaires ----------
 
@@ -83,7 +83,7 @@ export async function fetchItems(params?: { scope?: string }): Promise<Item[]> {
 }
 
 export async function fetchRecommendations(
-  userId: number,
+  userId: string,
   accessToken: string | null
 ): Promise<Recommendation[]> {
   return requestJson<Recommendation[]>(
@@ -117,4 +117,36 @@ export async function purchaseItem(
 // Shops
 export async function fetchShops(accessToken: string | null): Promise<Shop[]> {
   return requestJson<Shop[]>(`/shops`, {}, accessToken);
+}
+
+// ---------- Chat ----------
+
+export async function fetchConversations(
+  accessToken: string | null
+): Promise<GetConversationsResponse> {
+  return requestJson<GetConversationsResponse>(`/conversations`, {}, accessToken);
+}
+
+export async function fetchConversation(
+  otherUserId: string,
+  accessToken: string | null
+): Promise<GetConversationResponse> {
+  return requestJson<GetConversationResponse>(
+    `/conversations/${encodeURIComponent(otherUserId)}`,
+    {},
+    accessToken
+  );
+}
+
+export async function sendMessage(
+  otherUserId: string,
+  content: string,
+  accessToken: string | null
+): Promise<ChatMessage> {
+  const body: SendMessageRequest = { content };
+  return requestJson<ChatMessage>(
+    `/conversations/${encodeURIComponent(otherUserId)}`,
+    { method: "POST", body },
+    accessToken
+  );
 }

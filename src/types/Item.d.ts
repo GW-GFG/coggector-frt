@@ -1,14 +1,14 @@
 type Item = {
-  id: number | string;
+  id: number;
   title: string;
   category: string;
   description: string;
   price: number;
   currency: string;
   shippingFees: number;
-  sellerId: number;
+  sellerId: string;
   shopId: number;
   status: string;
   imageUrl: string;
-  watchers: number[];
+  watchers: string[];
 };

@@ -1,0 +1,3 @@
+type GetConversationsResponse = {
+  conversations: Conversation[];
+};

@@ -1,4 +1,5 @@
 import { useEffect, useState, ReactNode } from "react";
+import { keycloak, initKeycloakOnce } from "./auth/keycloak";
 
 import Layout from "./components/Layout";
 import ItemList from "./components/ItemList";
@@ -16,9 +17,13 @@ import {
   changeItemPrice,
   fetchShops,
 } from "./api";
+import ChatPanel from "./components/ChatPanel";
 
 export default function App(): JSX.Element {
+  const [authReady, setAuthReady] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [accessToken, setAccessToken] = useState<string | null>(null);
+
   const [health, setHealth] = useState<HealthResponse | null>(null);
   const [items, setItems] = useState<Item[]>([]);
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
@@ -30,13 +35,54 @@ export default function App(): JSX.Element {
   const [toast, setToast] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // charge health + user + items + shops au changement d'accessToken
+  // Init Keycloak once
   useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const authenticated = await initKeycloakOnce({
+          onLoad: "check-sso",
+          pkceMethod: "S256",
+          silentCheckSsoFallback: false,
+        });
+        console.log("authenticated", authenticated);
+        console.log("token present", Boolean(keycloak.token));
+
+        if (cancelled) return;
+
+        setIsAuthenticated(authenticated);
+        setAccessToken(keycloak.token ?? null);
+
+        keycloak.onTokenExpired = async () => {
+          try {
+            const refreshed = await keycloak.updateToken(30);
+            if (refreshed) setAccessToken(keycloak.token ?? null);
+          } catch {
+            setIsAuthenticated(false);
+            setAccessToken(null);
+          }
+        };
+      } finally {
+        if (!cancelled) setAuthReady(true);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+    // Fetch health + user + items + shops when auth changes
+  useEffect(() => {
+    if (!authReady) return;
+
     async function init(): Promise<void> {
       setLoading(true);
       setError(null);
       setRecoData(null);
       setShops([]);
+
       try {
         const healthRes = await fetchHealth();
         setHealth(healthRes);
@@ -54,13 +100,12 @@ export default function App(): JSX.Element {
           setCurrentUser(null);
         }
 
-        const isSeller = userRes?.roles?.includes("seller");
+        const isSeller = userRes?.roles?.includes("seller") ?? false;
 
         const itemsRes = await fetchItems({ scope: undefined });
         setItems(itemsRes);
         setSelectedItem(itemsRes[0] || null);
 
-        // Shops uniquement pour les sellers
         if (isSeller && accessToken) {
           const shopsRes = await fetchShops(accessToken);
           setShops(shopsRes);
@@ -72,21 +117,30 @@ export default function App(): JSX.Element {
         setLoading(false);
       }
     }
+
     init();
-  }, [accessToken]);
+  }, [authReady, accessToken]);
+
+    const handleLogin = (): void => {
+    void keycloak.login();
+  };
+
+  const handleLogout = (): void => {
+    void keycloak.logout();
+  };
 
   const handleLoadRecommendations = async (): Promise<void> => {
     if (!currentUser?.id || !currentUser?.roles?.includes("buyer")) return;
     setLoadingRecs(true);
     setError(null);
     try {
-      const userId = parseInt(currentUser.id, 10);
+      const userId = currentUser.id;
       const data = await fetchRecommendations(userId, accessToken);
       setRecoData(data);
     } catch (e) {
       console.error(e);
       setError(
-        "Erreur lors du chargement des recommandations (buyer seulement)."
+        "Erreur lors du chargement des recommandations."
       );
     } finally {
       setLoadingRecs(false);
@@ -94,7 +148,7 @@ export default function App(): JSX.Element {
   };
 
   const handleChangePrice = async (
-    itemId: number | string,
+    itemId: number,
     newPrice: number
   ): Promise<void> => {
     try {
@@ -119,7 +173,7 @@ export default function App(): JSX.Element {
     }
   };
 
-  const handlePurchase = async (itemId: number | string): Promise<void> => {
+  const handlePurchase = async (itemId: number): Promise<void> => {
     try {
       await purchaseItem(itemId, accessToken);
       setToast(`Achat simulé pour l'article ${itemId}`);
@@ -135,11 +189,12 @@ export default function App(): JSX.Element {
   const sidebar: ReactNode = (
     <>
       <UserSelector
-        accessToken={accessToken}
-        onChangeAccessToken={setAccessToken}
-        onLoadRecommendations={handleLoadRecommendations}
-        loadingRecs={loadingRecs}
-        currentUser={currentUser}
+      isAuthenticated={isAuthenticated}
+      onLogin={handleLogin}
+      onLogout={handleLogout}
+      onLoadRecommendations={handleLoadRecommendations}
+      loadingRecs={loadingRecs}
+      currentUser={currentUser}
       />
       {health && (
         <div className="card">
@@ -187,6 +242,12 @@ export default function App(): JSX.Element {
             {currentUser?.roles?.includes("buyer") && (
               <Recommendations data={recoData} />
             )}
+            <ChatPanel
+              accessToken={accessToken}
+              currentUser={currentUser}
+              isAuthenticated={isAuthenticated}
+              selectedItem={selectedItem}
+            />
           </div>
         </div>
       </Layout>

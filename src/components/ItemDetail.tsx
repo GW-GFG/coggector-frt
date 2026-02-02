@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 
 interface ItemDetailProps {
   item: Item | null;
-  onChangePrice: (itemId: number | string, newPrice: number) => Promise<void>;
-  onPurchase: (itemId: number | string) => Promise<void>;
+  onChangePrice: (itemId: number, newPrice: number) => Promise<void>;
+  onPurchase: (itemId: number) => Promise<void>;
   currentUser: CurrentUser | null;
 }
 
@@ -32,7 +32,7 @@ export default function ItemDetail({
 
   const isBuyer = currentUser?.roles?.includes("buyer");
   const isSeller = currentUser?.roles?.includes("seller");
-  const isOwner = currentUser && item.sellerId === Number(currentUser.id);
+  const isOwner = currentUser && item.sellerId === currentUser.id;
   const isGuest = !currentUser;
 
   const handleSubmitPrice = (e: React.FormEvent<HTMLFormElement>): void => {
