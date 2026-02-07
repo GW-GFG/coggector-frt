@@ -17,12 +17,12 @@ class MockWebSocket {
   addEventListener = vi.fn();
   removeEventListener = vi.fn();
   readyState = 1; // OPEN
-  onopen = null;
-  onclose = null;
-  onmessage = null;
-  onerror = null;
+  onopen: ((event: Event) => void) | null = null;
+  onclose: ((event: Event) => void) | null = null;
+  onmessage: ((event: MessageEvent) => void) | null = null;
+  onerror: ((event: Event) => void) | null = null;
 
-  constructor(url: string) {
+  constructor(_url: string) {
     // Simulate async connection
     setTimeout(() => {
       if (this.onopen) {

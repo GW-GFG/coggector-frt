@@ -1,96 +1,182 @@
-# Collector-frontend
+## Gwendoline MAALSI - Collector Frontend
 
-add jsp
-add ee
-add vvv
-add nn
-add bv
-## Getting started
+# Collector Frontend
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+React + TypeScript frontend for the Collector marketplace application with real-time chat functionality.
+Based on the group project. Implémenting a real-time chat feature using WebSocket, integrated with Keycloak for authentication.
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+## Tech Stack
 
-## Add your files
+- React 18 with TypeScript
+- Vite 6 (build tool)
+- Vitest 2 (testing)
+- Keycloak (authentication)
+- WebSocket (real-time chat)
+- CSS Modules
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
+## Prerequisites
+
+- Node.js 18+ or 20+
+- npm 9+
+- Backend services running (API Gateway, User Service, Chat Service)
+
+## Getting Started
+
+### Installation
+
+```bash
+npm install
+```
+
+### Environment Variables
+
+Create a `.env` file:
+
+```env
+VITE_API_BASE=http://localhost:80
+VITE_KEYCLOAK_URL=http://localhost:8080
+VITE_KEYCLOAK_REALM=collector
+VITE_KEYCLOAK_CLIENT_ID=collector-frontend
+```
+
+### Development
+
+```bash
+npm run dev
+```
+
+Application runs on `http://localhost:5173`
+
+### Build
+
+```bash
+npm run build
+```
+
+Output in `dist/` directory.
+
+## Testing
+
+### Run Tests
+
+```bash
+npm test
+
+### Coverage Report
+
+```bash
+npm run test:coverage
+```
+
+Coverage reports generated in `coverage/` directory.
+
+## Code Conventions
+
+- TypeScript strict mode enabled
+- ESLint for code quality
+- Component naming: PascalCase
+- File naming: PascalCase for components, camelCase for utilities
+- Types: Separate `.d.ts` files in `src/types/`
+- API calls: Centralized in `src/api.ts`
+
+## Architecture
 
 ```
-cd existing_repo
-git remote add origin https://gitlab.com/collector4/collector-frontend.git
-git branch -M main
-git push -uf origin main
+src/
+├── components/          # React components
+│   ├── ChatPanel.tsx   # Real-time chat with WebSocket
+│   ├── ItemList.tsx    # Marketplace item listing
+│   ├── ItemDetail.tsx  # Item details view
+│   └── ...
+├── types/              # TypeScript type definitions
+├── auth/               # Keycloak configuration
+├── api.ts              # API client functions
+├── App.tsx             # Main application component
+└── main.tsx            # Application entry point
 ```
 
-## Integrate with your tools
+## Features
 
-- [ ] [Set up project integrations](https://gitlab.com/collector4/collector-frontend/-/settings/integrations)
+- User authentication via Keycloak
+- Marketplace item browsing
+- Real-time 1-to-1 chat between buyers and sellers
+- Context-aware chat (auto-select conversation based on selected item)
+- WebSocket with automatic reconnection
+- Online user status indicator
 
-## Collaborate with your team
+## Backend Integration
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
+### Expected Backend Services
 
-## Test and Deploy
+#### API Gateway (port 80)
+- Validates JWT tokens
+- Injects `x-user-id` and `x-user-username` headers
+- Routes requests to microservices
 
-Use the built-in continuous integration in GitLab.
+#### Chat Service (port 4004)
+- WebSocket endpoint: `ws://gateway/ws?token=<JWT>`
+- REST endpoints:
+  - `GET /conversations/:userId` - Fetch conversation history
+  - `POST /conversations/:userId` - Send message
+  - `GET /online-users` - Get online user IDs
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+#### User Service (port 4001)
+- `GET /users/:id` - Get user details
+- `GET /users` - List users
 
-***
+### CORS Configuration
 
-# Editing this README
+Backend must allow:
+```
+Access-Control-Allow-Origin: http://localhost:5173
+Access-Control-Allow-Credentials: true
+Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS
+Access-Control-Allow-Headers: Content-Type, Authorization
+```
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+### WebSocket Authentication
 
-## Suggestions for a good README
+Token passed as query parameter:
+```
+ws://gateway/ws?token=<JWT>
+```
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+## CI/CD
 
-## Name
-Choose a self-explaining name for your project.
+GitHub Actions workflow (`.github/workflows/frontend-ci.yml`):
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+### Triggers
+- Push to `main` or `develop`
+- Pull requests to `main`
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+### Jobs
+1. **build-and-test**
+   - Linting
+   - Unit tests
+   - Coverage report
+   - Build verification
+   - Security audit
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+2. **security-scan**
+   - Trivy vulnerability scanning
+   - SARIF upload to GitHub Security
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+## Project Structure Notes
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+- **Authentication**: JWT tokens stored in memory (not localStorage for security)
+- **State Management**: React hooks (useState, useEffect, useRef)
+- **WebSocket**: Native WebSocket API with exponential backoff reconnection
+- **Type Safety**: All API responses and props fully typed
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+## Troubleshooting
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
-
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+### WebSocket Connection Fails
+- Verify backend is running
+- Check `VITE_API_BASE` environment variable
+- Ensure CORS is properly configured
+- Verify JWT token is valid
 
 ## License
-For open source projects, say how it is licensed.
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+Private project for educational purposes.
