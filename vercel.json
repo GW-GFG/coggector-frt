@@ -3,5 +3,11 @@
   "devCommand": "npm run dev",
   "installCommand": "npm ci",
   "framework": "vite",
-  "outputDirectory": "dist"
+  "outputDirectory": "dist",
+  "env": {
+    "VITE_API_BASE": "https://api.gw-collector.ovh",
+    "VITE_KEYCLOAK_URL": "https://auth.gw-collector.ovh",
+    "VITE_KEYCLOAK_REALM": "collector",
+    "VITE_KEYCLOAK_CLIENT_ID": "collector-client"
+  }
 }
