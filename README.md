@@ -33,11 +33,18 @@ npm install
 Create a `.env` file:
 
 ```env
-VITE_API_BASE=http://localhost:80
+# Local development
+VITE_API_BASE=http://localhost:3000
 VITE_KEYCLOAK_URL=http://localhost:8080
 VITE_KEYCLOAK_REALM=collector
-VITE_KEYCLOAK_CLIENT_ID=collector-frontend
-```
+VITE_KEYCLOAK_CLIENT_ID=collector-client
+
+# Production (Vercel with Kubernetes backend)
+# VITE_API_BASE=https://api.gw-collector.fr
+# VITE_KEYCLOAK_URL=https://auth.gw-collector.fr
+# VITE_KEYCLOAK_REALM=collector
+# VITE_KEYCLOAK_CLIENT_ID=collector-client
+
 
 ### Development
 
@@ -132,6 +139,12 @@ Access-Control-Allow-Origin: http://localhost:5173
 Access-Control-Allow-Credentials: true
 Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS
 Access-Control-Allow-Headers: Content-Type, Authorization
+```
+
+For production (Vercel):
+```
+Access-Control-Allow-Origin: https://collector-frontend.vercel.app
+# Or with custom domain: https://gw-collector.fr
 ```
 
 ### WebSocket Authentication
