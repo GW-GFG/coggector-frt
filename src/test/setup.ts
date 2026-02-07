@@ -7,21 +7,32 @@ afterEach(() => {
   cleanup();
 });
 
-// Mock scrollIntoView (non disponible dans jsdom)
+// Mock scrollIntoView (not available in jsdom)
 Element.prototype.scrollIntoView = vi.fn();
 
-// Mock WebSocket
-global.WebSocket = vi.fn(() => ({
-  send: vi.fn(),
-  close: vi.fn(),
-  addEventListener: vi.fn(),
-  removeEventListener: vi.fn(),
-  readyState: 1, // OPEN
-  onopen: null,
-  onclose: null,
-  onmessage: null,
-  onerror: null
-})) as any;
+// Mock WebSocket as a class constructor
+class MockWebSocket {
+  send = vi.fn();
+  close = vi.fn();
+  addEventListener = vi.fn();
+  removeEventListener = vi.fn();
+  readyState = 1; // OPEN
+  onopen = null;
+  onclose = null;
+  onmessage = null;
+  onerror = null;
+
+  constructor(url: string) {
+    // Simulate async connection
+    setTimeout(() => {
+      if (this.onopen) {
+        this.onopen(new Event('open'));
+      }
+    }, 0);
+  }
+}
+
+global.WebSocket = MockWebSocket as any;
 
 // Mock matchMedia
 Object.defineProperty(window, 'matchMedia', {
