@@ -581,6 +581,24 @@ input:focus {
   box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.5);
 }
 
+.chat-active-user {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: rgba(15, 23, 42, 0.6);
+  border-radius: 10px;
+  margin-bottom: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.chat-user-indicator {
+  display: flex;
+  align-items: center;
+  font-size: 0.75rem;
+  color: #cbd5e1;
+}
+
 .chat-messages {
   max-height: 320px;
   overflow-y: auto;

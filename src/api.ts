@@ -150,3 +150,7 @@ export async function sendMessage(
     accessToken
   );
 }
+
+export async function fetchOnlineUsers(accessToken: string): Promise<{ onlineUserIds: string[] }> {
+  return requestJson<{ onlineUserIds: string[] }>("/online-users", {}, accessToken);
+}

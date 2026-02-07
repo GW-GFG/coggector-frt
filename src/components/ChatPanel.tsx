@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { API_BASE, fetchConversation, sendMessage } from "../api";
+import { API_BASE, fetchConversation, fetchOnlineUsers, sendMessage } from "../api";
 
-type WsStatus = "disconnected" | "connecting" | "connected" | "error";
+const capitalize = (str: string): string => {
+  if (!str) return str;
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+};
 
 export default function ChatPanel({
   accessToken,
@@ -14,9 +17,12 @@ export default function ChatPanel({
   const [content, setContent] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [wsStatus, setWsStatus] = useState<WsStatus>("disconnected");
+  const [isActiveUserOnline, setIsActiveUserOnline] = useState<boolean>(false);
 
   const wsRef = useRef<WebSocket | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const reconnectTimeoutRef = useRef<number | null>(null);
+  const reconnectAttemptsRef = useRef<number>(0);
 
   const wsUrl = useMemo(() => {
     if (!accessToken) return null;
@@ -37,15 +43,16 @@ export default function ChatPanel({
       return;
     }
 
-    const isOwner = selectedItem.sellerId === currentUser.id;
+    const actualSellerId = selectedItem.seller?.id || selectedItem.sellerId;
+    const isOwner = actualSellerId === currentUser.id;
 
     if (!isOwner) {
-      // Acheteur : sélectionne le vendeur automatiquement
-      if (selectedItem.sellerId !== currentUser.id) {
-        setActiveUserId(selectedItem.sellerId);
+      // If I'm not the owner, chat with the seller
+      if (actualSellerId !== currentUser.id) {
+        setActiveUserId(actualSellerId);
       }
     } else {
-      // Propriétaire : ne sélectionne personne (il choisit parmi les watchers)
+      // If I'm the owner, reset active user (let me choose among watchers)
       setActiveUserId("");
     }
   }, [selectedItem, currentUser]);
@@ -81,65 +88,131 @@ export default function ChatPanel({
     };
   }, [accessToken, activeUserId]);
 
+  // Poll online status for active user
   useEffect(() => {
-    if (!wsUrl || !activeUserId) return;
+    if (!accessToken || !activeUserId) {
+      setIsActiveUserOnline(false);
+      return;
+    }
 
-    setWsStatus("connecting");
-    const ws = new WebSocket(wsUrl);
-    wsRef.current = ws;
-
-    ws.onopen = () => {
-      setWsStatus("connected");
-      ws.send(JSON.stringify({ type: "hello" }));
-    };
-
-    ws.onmessage = (event) => {
+    const checkOnlineStatus = async () => {
       try {
-        const msg = JSON.parse(event.data);
-
-        if (msg.type === "message") {
-          const isRelevant =
-            msg.fromUserId === activeUserId || msg.toUserId === activeUserId;
-
-          if (!isRelevant) return;
-
-          setMessages((prev) => {
-            if (prev.some((m) => m.serverMsgId === msg.serverMsgId)) return prev;
-            return [...prev, msg];
-          });
-        }
+        const result = await fetchOnlineUsers(accessToken);
+        setIsActiveUserOnline(result.onlineUserIds.includes(activeUserId));
       } catch (e) {
-        console.warn("Invalid WS payload", e);
+        console.error("Failed to fetch online users", e);
       }
     };
 
-    ws.onerror = () => setWsStatus("error");
-    ws.onclose = () => setWsStatus("disconnected");
+    checkOnlineStatus();
+    const interval = setInterval(checkOnlineStatus, 10000); // Check every 10s
+
+    return () => clearInterval(interval);
+  }, [accessToken, activeUserId]);
+
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  useEffect(() => {
+    if (!wsUrl || !activeUserId) {
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+        reconnectTimeoutRef.current = null;
+      }
+      reconnectAttemptsRef.current = 0;
+      return;
+    }
+
+    const connectWebSocket = () => {
+      const ws = new WebSocket(wsUrl);
+      wsRef.current = ws;
+
+      ws.onopen = () => {
+        reconnectAttemptsRef.current = 0;
+        ws.send(JSON.stringify({ type: "hello" }));
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const msg = JSON.parse(event.data);
+
+          if (msg.type === "message") {
+            const isRelevant =
+              msg.fromUserId === activeUserId || msg.toUserId === activeUserId;
+
+            if (!isRelevant) return;
+
+            const chatMsg: ChatMessage = {
+              serverMsgId: msg.serverMsgId!,
+              conversationId: msg.conversationId!,
+              fromUserId: msg.fromUserId!,
+              fromUsername: msg.fromUsername,
+              toUserId: msg.toUserId!,
+              content: msg.content!,
+              sentAt: msg.sentAt!,
+            };
+
+            setMessages((prev) => {
+              if (prev.some((m) => m.serverMsgId === chatMsg.serverMsgId)) return prev;
+              return [...prev, chatMsg];
+            });
+          }
+        } catch (e) {
+          console.warn("Invalid WS payload", e);
+        }
+      };
+
+      ws.onclose = () => {
+        wsRef.current = null;
+        
+        // Reconnect with exponential backoff
+        const delay = Math.min(1000 * Math.pow(2, reconnectAttemptsRef.current), 30000);
+        reconnectAttemptsRef.current += 1;
+        
+        reconnectTimeoutRef.current = setTimeout(() => {
+          if (wsUrl && activeUserId) {
+            connectWebSocket();
+          }
+        }, delay);
+      };
+    };
+
+    connectWebSocket();
 
     return () => {
-      ws.close();
-      wsRef.current = null;
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+        reconnectTimeoutRef.current = null;
+      }
+      if (wsRef.current) {
+        wsRef.current.close();
+        wsRef.current = null;
+      }
     };
   }, [wsUrl, activeUserId]);
 
   const openConversation = (userId: string): void => {
-    if (!userId.trim()) return;
-    if (userId.trim() === currentUser?.id) {
+    const trimmedId = userId.trim();
+    if (!trimmedId) return;
+    if (trimmedId === currentUser?.id) {
       setError("Impossible de discuter avec vous-même.");
       return;
     }
     setError(null);
-    setActiveUserId(userId.trim());
+    setActiveUserId(trimmedId);
   };
 
   const handleSend = async (): Promise<void> => {
-    if (!accessToken || !activeUserId) return;
+    if (!accessToken || !activeUserId || !currentUser?.id) return;
 
     const trimmed = content.trim();
     if (!trimmed) return;
 
     setContent("");
 
+    // If WebSocket is open, send directly (server will broadcast back)
     if (wsRef.current?.readyState === WebSocket.OPEN) {
       wsRef.current.send(
         JSON.stringify({
@@ -151,11 +224,29 @@ export default function ChatPanel({
       return;
     }
 
+    // Fallback to REST with optimistic UI
+    const tempId = `temp-${Date.now()}`;
+    const optimisticMsg: ChatMessage = {
+      serverMsgId: tempId,
+      conversationId: "",
+      fromUserId: currentUser.id,
+      fromUsername: currentUser.username,
+      toUserId: activeUserId,
+      content: trimmed,
+      sentAt: new Date().toISOString(),
+    };
+    setMessages((prev) => [...prev, optimisticMsg]);
+
     try {
       const msg = await sendMessage(activeUserId, trimmed, accessToken);
-      setMessages((prev) => [...prev, msg]);
+      // Replace optimistic message with real one
+      setMessages((prev) => 
+        prev.map(m => m.serverMsgId === tempId ? msg : m)
+      );
     } catch (e) {
       console.error(e);
+      // Remove optimistic message on error
+      setMessages((prev) => prev.filter(m => m.serverMsgId !== tempId));
       setError("Échec de l'envoi du message.");
     }
   };
@@ -173,22 +264,25 @@ export default function ChatPanel({
   };
 
   const canChat = Boolean(accessToken && currentUser?.id);
-  const isOwner = selectedItem && currentUser && selectedItem.sellerId === currentUser.id;
+  const actualSellerId = selectedItem?.seller?.id || selectedItem?.sellerId;
+  const isOwner = selectedItem && currentUser && actualSellerId === currentUser.id;
   const watchers = selectedItem?.watchers || [];
-  const availableWatchers = watchers.filter((w) => w !== currentUser?.id);
+  const availableWatchers = watchers.filter((w) => w.id !== currentUser?.id);
 
   return (
     <div className="card chat-panel">
       <div className="card-title-row">
         <h2 className="card-title">Chat 1v1</h2>
-        <span className="chat-status">
-          <span
-            className={`status-dot ${
-              wsStatus === "connected" ? "status-ok" : ""
-            }`}
-          />
-          {wsStatus}
-        </span>
+        {activeUserId && (
+          <span className="chat-status">
+            <span
+              className={`status-dot ${
+                isActiveUserOnline ? "status-ok" : ""
+              }`}
+            />
+            {isActiveUserOnline ? "En ligne" : "Hors ligne"}
+          </span>
+        )}
       </div>
 
       {!isAuthenticated && (
@@ -212,16 +306,16 @@ export default function ChatPanel({
                 <p className="hint">Aucun acheteur intéressé pour le moment.</p>
               ) : (
                 <div className="chat-user-list">
-                  {availableWatchers.map((watcherId) => (
+                  {availableWatchers.map((watcher) => (
                     <button
-                      key={watcherId}
+                      key={watcher.id}
                       className={`chat-user-btn ${
-                        activeUserId === watcherId ? "is-active" : ""
+                        activeUserId === watcher.id ? "is-active" : ""
                       }`}
-                      onClick={() => openConversation(watcherId)}
+                      onClick={() => openConversation(watcher.id)}
                     >
                       <div>
-                        <strong>{watcherId}</strong>
+                        <strong>{capitalize(watcher.username || watcher.id)}</strong>
                         <div className="hint">Acheteur potentiel</div>
                       </div>
                     </button>
@@ -235,7 +329,7 @@ export default function ChatPanel({
               <div className="chat-user-list">
                 <button className="chat-user-btn is-active" style={{ cursor: "default" }}>
                   <div>
-                    <strong>{selectedItem.sellerId}</strong>
+                    <strong>{capitalize(selectedItem.seller?.username || selectedItem.sellerId)}</strong>
                     <div className="hint">Vendeur de cet article</div>
                   </div>
                 </button>
@@ -255,6 +349,11 @@ export default function ChatPanel({
 
                 {messages.map((msg) => {
                   const isMe = msg.fromUserId === currentUser?.id;
+                  const rawName = isMe 
+                    ? (currentUser?.username || "Moi")
+                    : (msg.fromUsername || msg.fromUserId);
+                  const displayName = rawName === "Moi" ? rawName : capitalize(rawName);
+
                   return (
                     <div
                       key={msg.serverMsgId}
@@ -262,12 +361,13 @@ export default function ChatPanel({
                     >
                       <div>{msg.content}</div>
                       <div className="chat-meta">
-                        <span>{isMe ? "Moi" : msg.fromUserId}</span>
+                        <span>{displayName}</span>
                         <span>{formatTime(msg.sentAt)}</span>
                       </div>
                     </div>
                   );
                 })}
+                <div ref={messagesEndRef} />
               </div>
 
               <div className="chat-input-row">

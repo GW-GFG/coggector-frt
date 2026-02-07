@@ -1,3 +1,8 @@
+type UserBasic = {
+  id: string;
+  username?: string;
+};
+
 type Item = {
   id: number;
   title: string;
@@ -7,8 +12,9 @@ type Item = {
   currency: string;
   shippingFees: number;
   sellerId: string;
+  seller?: UserBasic;
   shopId: number;
   status: string;
   imageUrl: string;
-  watchers: string[];
+  watchers: UserBasic[];
 };
